@@ -55,11 +55,11 @@ lazy val publishSettings = Seq(
   releaseCrossBuild := true,
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   publishTo := {
-    val nexus = "https://oss.sonatype.org/"
+    val nexus = "https://nexus.waylay.io/"
     if (isRelease)
-      Some("releases" at nexus + "service/local/staging/deploy/maven2")
+      Some("releases" at nexus + "repository/maven-releases")
     else
-      Some("snapshots" at nexus + "content/repositories/snapshots")
+      Some("snapshots" at nexus + "repository/maven-snapshots")
   }
 )
 
