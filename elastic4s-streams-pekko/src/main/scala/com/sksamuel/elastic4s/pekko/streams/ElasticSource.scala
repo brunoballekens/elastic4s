@@ -43,10 +43,13 @@ class ElasticSource(client: ElasticClient, settings: SourceSettings)
     if (settings.warm)
       fetch()
 
+    private def elasticErrorToRuntimeException(err:ElasticError):Exception =
+      err.causedBy.fold(new RuntimeException(s"${err.`type`} ${err.reason}", Option(err.rootCause).flatMap(_.headOption).map(elasticErrorToRuntimeException).orNull))(cause => new RuntimeException(s"${err.`type`} ${err.reason}", new RuntimeException(cause.toString)))
+
     private val populateHandler = getAsyncCallback[Try[Response[SearchResponse]]] {
       case Failure(e) => fail(out, e)
       case Success(response) => response match {
-        case RequestFailure(_, _, _, error) => fail(out, error.asException)
+        case RequestFailure(_, _, _, error) => fail(out, elasticErrorToRuntimeException(error))
         case RequestSuccess(_, _, _, searchr) =>
           searchr.scrollId match {
             case None => fail(out, new RuntimeException("Search response did not include a scroll id"))
